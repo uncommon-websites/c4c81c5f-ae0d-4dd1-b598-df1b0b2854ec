@@ -1,7 +1,9 @@
-<script>
+<script lang="ts">
     import { onMount } from 'svelte';
 
-    let isScrolled = false;
+    let isScrolled = $state(false);
+    let isDealersOpen = $state(false);
+    let dropdownRef: HTMLDivElement | null = $state(null);
 
     onMount(() => {
         const handleScroll = () => {
@@ -10,6 +12,25 @@
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     });
+
+    // Close dropdown when clicking outside
+    $effect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
+                isDealersOpen = false;
+            }
+        };
+
+        if (isDealersOpen) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    });
+
+    function toggleDealers(event: MouseEvent) {
+        event.stopPropagation();
+        isDealersOpen = !isDealersOpen;
+    }
 </script>
 
 <nav class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 {isScrolled ? 'bg-black/80 backdrop-blur-md py-4' : 'bg-transparent py-6'}">
@@ -25,11 +46,52 @@
 
         <!-- Links -->
         <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-            <a href="#" class="hover:text-white transition-colors">Platform</a>
+            <!-- Dealers Dropdown -->
+            <div class="relative" bind:this={dropdownRef}>
+                <button 
+                    onclick={toggleDealers}
+                    class={[
+                        'flex items-center gap-1 hover:text-white transition-colors',
+                        isDealersOpen ? 'text-white' : ''
+                    ]}
+                >
+                    Dealers
+                    <svg 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        class={[
+                            'transition-transform duration-200',
+                            isDealersOpen ? 'rotate-180' : ''
+                        ]}
+                    >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                
+                {#if isDealersOpen}
+                    <div class="absolute top-full left-0 mt-2 w-56 bg-black/95 backdrop-blur-md border border-gray-800 rounded-lg shadow-xl overflow-hidden">
+                        <a href="#" class="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                            Dealer Tools
+                        </a>
+                        <a href="#" class="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                            DealFlow
+                        </a>
+                        <a href="#" class="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                            ID & Income Verification
+                        </a>
+                    </div>
+                {/if}
+            </div>
+            
             <a href="#" class="hover:text-white transition-colors">Solutions</a>
             <a href="#" class="hover:text-white transition-colors">Integrations</a>
             <a href="#" class="hover:text-white transition-colors">Resources</a>
-            <a href="#" class="hover:text-white transition-colors">Dealers</a>
         </div>
 
         <!-- CTA -->
